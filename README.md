@@ -1,4 +1,5 @@
 <div align="center">
+
 # Configify
 
 A non invasive, plug-and-play constant/config variable editor during runtime, meant to help debug and find the perfect values for your games.
@@ -12,6 +13,7 @@ Reply in the [devforum thread](https://roblox.com/) if you have an issues/bugs.
 </div>
 
 # Example
+
 Here is an example of using the module.
 Please note that Configify needs to be created before any other scripts start making constants/configs with it!
 This means you will need to have some sort of module execution order, or require configify before other modules.
@@ -37,4 +39,5 @@ end)
 ```
 
 # Support
+
 Please just support by starring the repo and sharing with friends you might think its useful to.
