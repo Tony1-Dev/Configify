@@ -8,7 +8,7 @@ Configify is a simple tool thats meant to be simple to add to pre-existing proje
 
 [![License](https://img.shields.io/github/license/virtualbutfake/vfx-editor?style=flat)](https://github.com/Tony1-Dev/Configify/blob/main/LICENSE)
 
-Reply in the [devforum thread](https://roblox.com/) if you have an issues/bugs.
+Reply in the [devforum thread]([https://roblox.com/](https://devforum.roblox.com/t/configify-a-runtime-constantconfig-editor/3186154)) if you have an issues/bugs.
 
 </div>
 
