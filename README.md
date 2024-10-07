@@ -38,6 +38,16 @@ RunService.RenderStepped:Connect(function()
 end)
 ```
 
+# Build
+
+You can build Configify using Wally, downloading from releases, or getting the model from the devforum thread (see the top of this readme)
+Please note that getting the latest version from github/wally will be best, the model might not be up to date.
+
+```toml
+[dependencies]
+BloodEngine = "rotntake/blood-engine@1.1.2"
+```
+
 # Support
 
 Please just support by starring the repo and sharing with friends you might think its useful to.
