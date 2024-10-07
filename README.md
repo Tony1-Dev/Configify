@@ -45,7 +45,7 @@ Please note that getting the latest version from github/wally will be best, the 
 
 ```toml
 [dependencies]
-BloodEngine = "rotntake/blood-engine@1.1.2"
+Configify = "tony1-dev/configify@0.1.6"
 ```
 
 # Support
