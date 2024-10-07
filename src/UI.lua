@@ -1,11 +1,11 @@
-local DEBUG = script.Parent:GetAttribute("Debug")
+local DEBUG = script.Parent:GetAttribute("Debug") or false
 
-local COLOR_A = script.Parent:GetAttribute("COLOR_A")
-local COLOR_B = script.Parent:GetAttribute("COLOR_B")
-local COLOR_C = script.Parent:GetAttribute("COLOR_C")
-local COLOR_D = script.Parent:GetAttribute("COLOR_D")
-local COLOR_E = script.Parent:GetAttribute("COLOR_E")
-local COLOR_TRUE = script.Parent:GetAttribute("COLOR_TRUE")
+local COLOR_A = script.Parent:GetAttribute("COLOR_A") or Color3.fromRGB(45, 45, 45)
+local COLOR_B = script.Parent:GetAttribute("COLOR_B") or Color3.fromRGB(25, 25, 25)
+local COLOR_C = script.Parent:GetAttribute("COLOR_C") or Color3.fromRGB(18, 18, 18)
+local COLOR_D = script.Parent:GetAttribute("COLOR_D") or Color3.fromRGB(60, 60, 60)
+local COLOR_E = script.Parent:GetAttribute("COLOR_E") or Color3.fromRGB(255, 255, 255)
+local COLOR_TRUE = script.Parent:GetAttribute("COLOR_TRUE") or Color3.fromRGB(125, 125, 125)
 
 local players = game:GetService("Players")
 local runservice = game:GetService("RunService")

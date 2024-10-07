@@ -36,6 +36,8 @@
         end)
 ]]
 
+local KEYBIND = script:GetAttribute("ToggleKeybind") or "RightAlt"
+
 local cas = game:GetService("ContextActionService")
 local runservice = game:GetService("RunService")
 
@@ -99,7 +101,7 @@ function configify:_Init()
         self._UI:Toggle()
     end
 
-    cas:BindAction("ToggleConfigify", toggle, false, Enum.KeyCode[script:GetAttribute("ToggleKeybind")])
+    cas:BindAction("ToggleConfigify", toggle, false, Enum.KeyCode[KEYBIND])
 
     script:GetAttributeChangedSignal("ToggleKeybind"):Connect(function()
         cas:UnbindAction("ToggleConfigify")
