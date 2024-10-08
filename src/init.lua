@@ -54,7 +54,6 @@ local function get_tab_name() -- get name of script this is being called in
 end
 
 local function get_module(depth)
-    print(debug.info(depth, "s"))
     local path = string.split(debug.info(depth, "s"), ".")
     local module = game[path[1]]
 

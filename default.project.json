@@ -1,6 +1,23 @@
 {
 	"name": "Configify",
 	"tree": {
-		"$path": "src"
+		"$className": "DataModel",
+		"$ignoreUnknownInstances": true,
+
+		"ReplicatedStorage": {
+			"$ignoreUnknownInstances": true,
+			"$className": "ReplicatedStorage",
+
+			"Configify": {
+				"$path": "src"
+			},
+
+			"Client": {
+				"$path": "client",
+				"$properties": {
+					"RunContext": "Client"
+				}
+			}
+		}
 	}
 }
