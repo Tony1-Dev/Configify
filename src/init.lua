@@ -6,9 +6,9 @@
     A non invasive, plug-and-play constant/config variable editor during runtime, 
     meant to help debug and find the perfect values for your games.
 
-    Github repo: 
+    Github repo: https://github.com/Tony1-Dev/Configify
 
-    DevForum discussion: 
+    DevForum discussion: https://devforum.roblox.com/t/configify-a-runtime-constantconfig-editor/3186154
 
     Functions:
 
