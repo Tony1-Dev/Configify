@@ -40,6 +40,12 @@ end)
 
 ![Example](https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExeTlvenZ2ZzBzMGk1ajRrYmtiZWtvbDV4a214eG16M3F6OGs3NzB1cCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/EkFB33KzHUfMxp3wuk/giphy.gif)
 
+# Planned Features
+<ul>
+    <li>Server side constants</li>
+    <li>String support</li>
+</ul>
+
 # Build
 
 You can build Configify using Wally, downloading from releases, or getting the model from the devforum thread (see the top of this readme)
