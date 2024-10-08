@@ -136,7 +136,7 @@ function configify:_Init()
         self:_CreateUI()
     else
         local function initialize_existing_config(player)
-            self._comm:FireClient(player, "all", self._config)
+            self._comm:FireClient(player, self._config)
         end
         
         for i, v in players:GetPlayers() do
@@ -157,9 +157,9 @@ function configify:Set(att_name: string, initial: att_type, min: att_type, max: 
     local initial_type = type(initial)
 
     if is_client then
-        if tab_cache[module] == nil then
-            self._UI:AddTab(module)
-            tab_cache[module] = true
+        if tab_cache[module.Name] == nil then
+            self._UI:AddTab(module, "Client")
+            tab_cache[module.Name] = true
         end
 
         self._UI:AddConfig(att_name, initial, min, max, module)
@@ -192,11 +192,31 @@ end
 
 function configify:_ListenForComm()
     if is_client then
-        -- when the client starts listening, it has to request the current server config
-        -- this is because the server is too fast and couldve set config before the client event connected to the remote
+        self._comm.OnClientEvent:Connect(function(new_configs)
+            for att_name, info in new_configs do
+                local module_name = info["parent_script"]
 
-        self._comm.OnClientEvent:Connect(function(att_name, initial, min, max, module)
-            print(`module: {module}, new config: {att_name}, initial value: {initial}, min: {min}, max: {max}`)
+                -- if a tab doesn't exist for this script yet..
+                if not tab_cache[module_name] then
+                    self._UI:AddTab(module_name, "Server")
+                    tab_cache[module_name] = true
+                end
+
+                self._UI:AddConfig(
+                    att_name,
+                    info["value"],
+                    info["min"],
+                    info["max"],
+                    module_name
+                )
+
+                self._config[att_name] = {
+                    ["value"] = info["value"],
+                    ["min"] = info["min"],
+                    ["max"] = info["max"],
+                    ["parent_script"] = module_name
+                }
+            end
         end)
     else
         self._comm.OnServerEvent:Connect(function()

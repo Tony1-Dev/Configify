@@ -20,6 +20,16 @@ local signal = require(script.Parent.Dependencies.Signal)
 local configify_ui = {}
 configify_ui.__index = configify_ui
 
+local function set_visible(parent, bool, type)
+    for i, v in parent:GetChildren() do
+        if not v:IsA(type) then
+            continue
+        end
+
+        v.Visible = bool
+    end
+end
+
 local function create(inst_type: Instance, config: {}, ...)
     local children = {...}
     local inst = Instance.new(inst_type)
@@ -38,6 +48,7 @@ end
 function configify_ui.new()
     local self = setmetatable({}, configify_ui)
 
+    self._current_env = nil
     self._current_tab = nil
     self._ScreenGui = nil
     self.UIChanged = signal.new()
@@ -48,7 +59,7 @@ function configify_ui.new()
 end
 
 function configify_ui:_Init()
-    create(
+    local ui = create(
         "ScreenGui", {
             ["Name"] = "Configify",
             ["Enabled"] = DEBUG and true or false,
@@ -67,6 +78,64 @@ function configify_ui:_Init()
                 ["BackgroundColor3"] = COLOR_A,
             },
 
+
+            create(
+                "Frame", {
+                    ["Name"] = "EnvContainer",
+                    ["AnchorPoint"] = Vector2.new(0, 1),
+                    ["Position"] = UDim2.new(0, 0, 0, -30),
+                    ["Size"] = UDim2.new(1, 0, 0, 25),
+                    ["BackgroundColor3"] = COLOR_C,
+                },
+
+                create(
+                    "UIPadding", {
+                        ["PaddingTop"] = UDim.new(0, 6),
+                        ["PaddingBottom"] = UDim.new(0, 5),
+                        ["PaddingLeft"] = UDim.new(0, 5),
+                        ["PaddingRight"] = UDim.new(0, 5),
+                    }
+                ),
+
+                create(
+                    "TextButton", {
+                        ["Name"] = "ClientBtn",
+                        ["BackgroundTransparency"] = 1,
+                        ["Size"] = UDim2.new(0.5, 0, 1, 0),
+                        ["Text"] = "Client",
+                        ["TextColor3"] = COLOR_E,
+                        ["TextScaled"] = true,
+                    },
+
+                    create(
+                        "UIStroke", {
+                            ["Color"] = COLOR_D,
+                            ["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border
+                        }
+                    )
+                ),
+
+                create(
+                    "TextButton", {
+                        ["Name"] = "ServerBtn",
+                        ["AnchorPoint"] = Vector2.new(1, 0),
+                        ["Position"] = UDim2.fromScale(1, 0),
+                        ["BackgroundTransparency"] = 1,
+                        ["Size"] = UDim2.new(0.5, 0, 1, 0),
+                        ["Text"] = "Server",
+                        ["TextColor3"] = COLOR_E,
+                        ["TextScaled"] = true,
+                    },
+
+                    create(
+                        "UIStroke", {
+                            ["Color"] = COLOR_D,
+                            ["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border
+                        }
+                    )
+                )
+            ),
+
             create(
                 "ScrollingFrame", {
                     ["Name"] = "TabContainer",
@@ -79,6 +148,50 @@ function configify_ui:_Init()
                     ["ScrollBarImageColor3"] = Color3.fromRGB(0, 0, 0),
                     ["HorizontalScrollBarInset"] = Enum.ScrollBarInset.ScrollBar,
                 },
+
+                create(
+                    "Folder", {
+                        ["Name"] = "Client",
+                    },
+
+                    create(
+                        "UIListLayout", {
+                            ["FillDirection"] = Enum.FillDirection.Horizontal,
+                            ["Padding"] = UDim.new(0, 5)
+                        }
+                    ),
+    
+                    create(
+                        "UIPadding", {
+                            ["PaddingBottom"] = UDim.new(0, 5),
+                            ["PaddingTop"] = UDim.new(0, 5),
+                            ["PaddingLeft"] = UDim.new(0, 5),
+                            ["PaddingRight"] = UDim.new(0, 5),
+                        }
+                    )
+                ),
+
+                create(
+                    "Folder", {
+                        ["Name"] = "Server",
+                    },
+
+                    create(
+                        "UIListLayout", {
+                            ["FillDirection"] = Enum.FillDirection.Horizontal,
+                            ["Padding"] = UDim.new(0, 5)
+                        }
+                    ),
+    
+                    create(
+                        "UIPadding", {
+                            ["PaddingBottom"] = UDim.new(0, 5),
+                            ["PaddingTop"] = UDim.new(0, 5),
+                            ["PaddingLeft"] = UDim.new(0, 5),
+                            ["PaddingRight"] = UDim.new(0, 5),
+                        }
+                    )
+                ),
 
                 create(
                     "UIListLayout", {
@@ -129,10 +242,36 @@ function configify_ui:_Init()
         )
     )
 
-    self._ScreenGui = player_gui.Configify
+    self._ScreenGui = ui
+
+    local env_container = ui.Container.EnvContainer
+
+    local function setup_hover(ui_obj: Frame)
+        ui_obj.MouseEnter:Connect(function(x, y)
+            self:_HoverStart(ui_obj)
+        end)
+
+        ui_obj.MouseLeave:Connect(function(x, y)
+            self:_HoverStop(ui_obj)
+        end)
+    end
+
+    setup_hover(env_container.ClientBtn)
+    setup_hover(env_container.ServerBtn)
+
+    env_container.ClientBtn.MouseButton1Click:Connect(function()
+        self:_SelectEnvironment("Client")
+    end)
+
+    env_container.ServerBtn.MouseButton1Click:Connect(function()
+        self:_SelectEnvironment("Server")
+    end)
+
+    --Init
+    self:_SelectEnvironment("Client")
 end
 
-function configify_ui:AddTab(module)
+function configify_ui:AddTab(module, env_type: "Client" | "Server")
     local tab_name = module.Name
 
     -- Make folder for any config for this tab
@@ -180,7 +319,11 @@ function configify_ui:AddTab(module)
         )
     )
 
-    tab.Parent = self._ScreenGui.Container.TabContainer
+    if not self._current_env or self._current_env ~= env_type then
+        tab.Visible = false
+    end
+
+    tab.Parent = self._ScreenGui.Container.TabContainer[env_type]
 
     if not self._current_tab then
         self:_SelectTab(tab_name)
@@ -199,19 +342,27 @@ function configify_ui:AddTab(module)
     end)
 end
 
+function configify_ui:_SelectEnvironment(env_name)
+    local container = self._ScreenGui.Container
+    local scrolling_frame = container.ScrollingFrame
+
+    if self._current_env then
+        if self._current_env == env_name then
+            return
+        end
+
+        set_visible(container.TabContainer[self._current_env], false, "TextButton")
+        set_visible(scrolling_frame[self._current_tab], false, "TextButton")
+    end
+
+    self._current_env = env_name
+
+    set_visible(container.TabContainer[self._current_env], true, "TextButton")
+end
+
 function configify_ui:_SelectTab(tab_name)
     local tab_inst = self._ScreenGui.Container.TabContainer:FindFirstChild(tab_name)
     local scrolling_frame = self._ScreenGui.Container.ScrollingFrame
-    
-    local function set_visible(parent, bool, type)
-        for i, v in parent:GetChildren() do
-            if not v:IsA(type) then
-                continue
-            end
-
-            v.Visible = bool
-        end
-    end
 
     if self._current_tab then
         set_visible(scrolling_frame[self._current_tab], false, "TextButton")
@@ -235,7 +386,9 @@ function configify_ui:AddConfig(att_name, initial, min, max, module)
         return
     end
 
-    config.Parent = self._ScreenGui.Container.ScrollingFrame:FindFirstChild(module.Name)
+    config.Parent = self._ScreenGui.Container.ScrollingFrame:FindFirstChild(
+        typeof(module) == "Instance" and module.Name or module    
+    )
 end
 
 function configify_ui:_CreateSliderConfig(att_name, initial, min, max, module)

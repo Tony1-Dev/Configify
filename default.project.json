@@ -19,6 +19,13 @@
 				}
 			},
 
+			"ClientTest2": {
+				"$path": "client2",
+				"$properties": {
+					"RunContext": "Client"
+				}
+			},
+
 			"ServerTest": {
 				"$path": "server",
 				"$properties": {
