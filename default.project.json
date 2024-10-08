@@ -12,10 +12,17 @@
 				"$path": "src"
 			},
 
-			"Client": {
+			"ClientTest": {
 				"$path": "client",
 				"$properties": {
 					"RunContext": "Client"
+				}
+			},
+
+			"ServerTest": {
+				"$path": "server",
+				"$properties": {
+					"RunContext": "Server"
 				}
 			}
 		}
