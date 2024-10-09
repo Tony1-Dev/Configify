@@ -58,12 +58,30 @@ local function get_tab_name() -- get name of script this is being called in
     return path[#path]
 end
 
+-- for some reason, debug.info returns nil SOMETIMES in live servers, pcall to try helping?
 local function get_module(depth)
-    local path = string.split(debug.info(depth, "s"), ".")
-    local module = game[path[1]]
+    local num_attempts = 10
 
-    for i = 2, #path do
-        module = module[path[i]]
+    local module = nil
+    local path = nil
+
+    for i = 1, num_attempts do
+        local succ, err = pcall(function()
+            path = string.split(debug.info(depth + 2, "s"), ".") -- +2 because of added scope from loop and pcall
+            module = game[path[1]]
+        
+            for i = 2, #path do
+                module = module[path[i]]
+            end
+        end)
+
+        if succ then
+            break
+        else
+            warn(err)
+        end
+        
+        task.wait()
     end
 
     return module
