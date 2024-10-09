@@ -223,14 +223,14 @@ function configify:_ListenForComm()
                     continue
                 end
 
-                self._comm:FireClient(
-                    p,
-                    att_name,
-                    self._config[att_name].value,
-                    self._config[att_name].min,
-                    self._config[att_name].max,
-                    self._config[att_name].parent_script
-                )
+                self._comm:FireClient(p, {
+                    att_name = {
+                        ["value"] = self._config[att_name].value,
+                        ["min"] = self._config[att_name].min,
+                        ["max"] = self._config[att_name].max,
+                        ["parent_script"] = self._config[att_name].parent_script,
+                    }
+                })
             end
         end)
     end
