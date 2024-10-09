@@ -2,9 +2,14 @@ require(game.ReplicatedStorage.Configify)
 
 local SWORD_DAMAGE = _G.Cfg:Set("SWORD_DMG", 10, 0, 100)
 local BOOL = _G.Cfg:Set("BOOL", false)
+local SERVER_NAME = _G.Cfg:Set("Server_Name", "Cav's Server")
+
 
 while true do
-    wait(5)
-    print(SWORD_DAMAGE())
-    print(BOOL())
+    task.wait(1)
+    --print(SWORD_DAMAGE())
+    --print(BOOL())
+
+
+    workspace.Part.SurfaceGui.TextLabel.Text = SERVER_NAME()
 end

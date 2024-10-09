@@ -1,6 +1,6 @@
 [package]
 name = "tony1-dev/configify"
-version = "0.2.23"
+version = "0.1.7"
 license = "MIT"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
@@ -9,5 +9,3 @@ exclude = ["**"]
 include = ["src", "src/*", "default.project.json", "wally.toml"]
 
 [dependencies]
-Configify = "tony1-dev/configify@0.1.6"
-

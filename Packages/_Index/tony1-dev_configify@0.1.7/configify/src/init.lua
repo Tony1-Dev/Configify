@@ -190,13 +190,10 @@ function configify:Set(att_name: string, initial: att_type, min: att_type, max: 
 
     self._config[att_name] = {
         ["value"] = initial,
+        ["min"] = min,
+        ["max"] = max,
         ["parent_script"] = module_name
     }
-
-    if min and max then
-        self._config[att_name]["min"] = min
-        self._config[att_name]["max"] = max
-    end
 
     return function()
         if initial_type == "number" then
