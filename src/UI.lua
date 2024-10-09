@@ -1,3 +1,5 @@
+--TODO: Fix ScrollingFrame scaling all the way on Y, goes off screen.
+
 local DEBUG = script.Parent:GetAttribute("Debug") or false
 
 local COLOR_A = script.Parent:GetAttribute("COLOR_A") or Color3.fromRGB(45, 45, 45)
@@ -335,13 +337,23 @@ function configify_ui:_Init()
             click_or_hold:Disconnect()
             click_or_hold = nil
 
-            -- Click behavior
+            -- Click/minimize behavior
             env_container.Visible = not env_container.Visible
             ui.Container.ScrollingFrame.Visible = not ui.Container.ScrollingFrame.Visible
             tab_container.Visible = not tab_container.Visible
             resize_btn.Visible = not resize_btn.Visible
 
-            ui.Container.Size = UDim2.fromOffset(ui.Container.Size.X.Offset, 0)
+            local container_size_Y = ui.Container.Size.Y.Offset
+            local stored_size_Y = ui.Container:GetAttribute("PreviousSize")
+
+            if container_size_Y == 0 then
+                -- was closed, open
+                ui.Container.Size = UDim2.fromOffset(ui.Container.Size.X.Offset, stored_size_Y or 0)
+            else
+                -- was open, close
+                ui.Container:SetAttribute("PreviousSize", ui.Container.Size.Y.Offset)
+                ui.Container.Size = UDim2.fromOffset(ui.Container.Size.X.Offset, 0)
+            end
         end)
     end)
 
