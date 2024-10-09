@@ -5,7 +5,13 @@ local COLOR_B = script.Parent:GetAttribute("COLOR_B") or Color3.fromRGB(25, 25, 
 local COLOR_C = script.Parent:GetAttribute("COLOR_C") or Color3.fromRGB(18, 18, 18)
 local COLOR_D = script.Parent:GetAttribute("COLOR_D") or Color3.fromRGB(60, 60, 60)
 local COLOR_E = script.Parent:GetAttribute("COLOR_E") or Color3.fromRGB(255, 255, 255)
-local COLOR_TRUE = script.Parent:GetAttribute("COLOR_TRUE") or Color3.fromRGB(125, 125, 125)
+local COLOR_TRUE = script.Parent:GetAttribute("COLOR_TRUE") or Color3.fromRGB(109, 223, 99)
+
+local MIN_SIZE_X = 180 -- pixels
+
+local DRAG_LERP_ALPHA = 0.25
+local RESIZE_LERP_ALPHA = 1
+local RESIZING_SPEED = 1
 
 local players = game:GetService("Players")
 local runservice = game:GetService("RunService")
@@ -84,18 +90,45 @@ function configify_ui:_Init()
             ["IgnoreGuiInset"] = true,
             ["ResetOnSpawn"] = false,
             ["ZIndexBehavior"] = Enum.ZIndexBehavior.Global,
+            ["DisplayOrder"] = 100,
             ["Parent"] = player_gui
         },
 
         create(
             "Frame", {
                 ["Name"] = "Container",
-                ["AnchorPoint"] = Vector2.new(1, 1),
-                ["Position"] = UDim2.fromScale(1, 1),
-                ["Size"] = UDim2.fromOffset(200, 250),
+                ["Position"] = UDim2.fromScale(0.5, 0.5),
+                ["Size"] = UDim2.fromOffset(200, 0),
                 ["BackgroundColor3"] = COLOR_A,
+                ["AutomaticSize"] = Enum.AutomaticSize.Y,
+                ["BorderSizePixel"] = 0,
             },
 
+            create(
+                "ImageButton", {
+                    ["Name"] = "Resize",
+                    ["Position"] = UDim2.new(1, 0, 1, 0),
+                    ["AnchorPoint"] = Vector2.new(1, 1),
+                    ["Size"] = UDim2.fromOffset(15, 15),
+                    ["BorderSizePixel"] = 0,
+                    ["AutoButtonColor"] = false,
+                    ["BackgroundTransparency"] = 1,
+                    ["ImageTransparency"] = 0,
+                    ["Image"] = "rbxassetid://81689986742785"
+                }
+            ),
+
+            create(
+                "TextButton", {
+                    ["Name"] = "Drag",
+                    ["Text"] = "",
+                    ["BackgroundColor3"] = COLOR_C,
+                    ["Size"] = UDim2.new(1, 0, 0, 6),
+                    ["Position"] = UDim2.new(0, 0, 0, -60),
+                    ["AnchorPoint"] = Vector2.new(0, 1),
+                    ["AutoButtonColor"] = false
+                }
+            ),
 
             create(
                 "Frame", {
@@ -232,21 +265,15 @@ function configify_ui:_Init()
                 "ScrollingFrame", {
                     ["AutomaticCanvasSize"] = Enum.AutomaticSize.Y,
                     ["ScrollingDirection"] = Enum.ScrollingDirection.Y,
-                    ["Size"] = UDim2.fromScale(1, 1),
+                    ["AutomaticSize"] = Enum.AutomaticSize.Y,
+                    ["Size"] = UDim2.fromScale(1, 0),
                     ["BackgroundTransparency"] = 1,
-                    ["ClipsDescendants"] = true,
+                    ["ClipsDescendants"] = false,
                     ["CanvasSize"] = UDim2.fromScale(0, 0),
                     ["ScrollBarThickness"] = 4,
                     ["ScrollBarImageColor3"] = Color3.fromRGB(0, 0, 0),
                     ["VerticalScrollBarInset"] = Enum.ScrollBarInset.ScrollBar
                 },
-
-                create(
-                    "UIListLayout", {
-                        ["HorizontalAlignment"] = Enum.HorizontalAlignment.Center,
-                        ["Padding"] = UDim.new(0, 5)
-                    }
-                ),
         
                 create(
                     "UIPadding", {
@@ -263,6 +290,92 @@ function configify_ui:_Init()
     self._ScreenGui = ui
 
     local env_container = ui.Container.EnvContainer
+    local tab_container = ui.Container.TabContainer
+    local drag_btn: TextButton = ui.Container.Drag
+    local resize_btn: ImageButton = ui.Container.Resize
+
+    -- dragging/minimize logic
+    drag_btn.MouseButton1Down:Connect(function(x, y)
+        local click_or_hold = nil
+
+        local thread = task.delay(0.1, function()
+            if click_or_hold and click_or_hold.Connected then
+                click_or_hold:Disconnect()
+                click_or_hold = nil
+            end
+
+            local offset = ui.Container.AbsolutePosition - Vector2.new(mouse.X, mouse.Y)
+    
+            runservice:BindToRenderStep("Configify_DragStart", Enum.RenderPriority.Last.Value + 10, function(dt)
+                local goal = UDim2.fromOffset(
+                    mouse.X + offset.X, 
+                    mouse.Y + offset.Y + env_container.Size.Y.Offset + tab_container.Size.Y.Offset
+                )
+                ui.Container.Position = ui.Container.Position:Lerp(goal, DRAG_LERP_ALPHA)
+            end)
+
+            local c
+            c = uis.InputEnded:Connect(function(input)
+                if not (input.UserInputType == Enum.UserInputType.MouseButton1) then
+                    return
+                end
+
+                runservice:UnbindFromRenderStep("Configify_DragStart")
+                c:Disconnect()
+                c = nil
+            end)
+        end)
+
+        click_or_hold = uis.InputEnded:Connect(function(input)
+            if not (input.UserInputType == Enum.UserInputType.MouseButton1) then
+                return
+            end
+
+            task.cancel(thread)
+            click_or_hold:Disconnect()
+            click_or_hold = nil
+
+            -- Click behavior
+            env_container.Visible = not env_container.Visible
+            ui.Container.ScrollingFrame.Visible = not ui.Container.ScrollingFrame.Visible
+            tab_container.Visible = not tab_container.Visible
+            resize_btn.Visible = not resize_btn.Visible
+
+            ui.Container.Size = UDim2.fromOffset(ui.Container.Size.X.Offset, 0)
+        end)
+    end)
+
+    -- resizing logic
+    resize_btn.MouseButton1Down:Connect(function(x, y)
+        local mouse_delta = Vector2.zero
+        local mouse_pos = Vector2.new(mouse.X, mouse.Y)
+        ui.Container.Size = UDim2.fromOffset(ui.Container.Size.X.Offset, math.max(0, ui.Container.Size.Y.Offset))
+
+        runservice:BindToRenderStep("Configify_ResizeStart", Enum.RenderPriority.Last.Value + 10, function(dt)
+            local goal = UDim2.fromOffset(
+                math.max(ui.Container.Size.X.Offset - (mouse_delta.X * RESIZING_SPEED), MIN_SIZE_X),
+                ui.Container.Size.Y.Offset - (mouse_delta.Y * RESIZING_SPEED)
+            )
+
+            ui.Container.Size = ui.Container.Size:Lerp(goal, RESIZE_LERP_ALPHA)
+
+            local new_pos = Vector2.new(mouse.X, mouse.Y)
+            mouse_delta = mouse_pos - new_pos
+            
+            mouse_pos = new_pos
+        end)
+
+        local c
+        c = uis.InputEnded:Connect(function(input)
+            if not (input.UserInputType == Enum.UserInputType.MouseButton1) then
+                return
+            end
+
+            runservice:UnbindFromRenderStep("Configify_ResizeStart")
+            c:Disconnect()
+            c = nil
+        end)
+    end)
 
     local function setup_hover(ui_obj: Frame)
         ui_obj.MouseEnter:Connect(function(x, y)
