@@ -109,10 +109,12 @@ end
 function configify:_CreateUI()
     self._UI = require(script.UI).new()
 
-    self._UI.UIChanged:Connect(function(att_name, att_value, module)
-        module:SetAttribute(att_name, att_value)
-
+    self._UI.UIChanged:Connect(function(att_name, att_value, env)
         self._config[att_name].value = att_value
+
+        if env == "Server" then
+            self._comm:FireServer(att_name, att_value)
+        end
     end)
 
     local function toggle(action_name, input_state, input_obj)
@@ -153,32 +155,26 @@ function configify:_Init()
 end
 
 function configify:Set(att_name: string, initial: att_type, min: att_type, max: att_type): () -> att_type
-    local module = get_module(3)
+    local module_name = get_module(3).Name
     local initial_type = type(initial)
 
     if is_client then
-        if tab_cache[module.Name] == nil then
-            self._UI:AddTab(module, "Client")
-            tab_cache[module.Name] = true
+        if tab_cache[module_name] == nil then
+            self._UI:AddTab(module_name, "Client")
+            tab_cache[module_name] = true
         end
 
-        self._UI:AddConfig(att_name, initial, min, max, module)
+        self._UI:AddConfig(att_name, initial, min, max, module_name)
     else
         --TODO: Change this to fire specific clients based on a whitelist/group rank
-        self._comm:FireAllClients(att_name, initial, min, max, module)
+        self._comm:FireAllClients(att_name, initial, min, max, module_name)
     end
-
-    module:SetAttribute(att_name, initial)
-    module:GetAttributeChangedSignal(att_name):Connect(function()
-        local v = module:GetAttribute(att_name)
-        self._config[att_name].value = v
-    end)
 
     self._config[att_name] = {
         ["value"] = initial,
         ["min"] = min,
         ["max"] = max,
-        ["parent_script"] = module
+        ["parent_script"] = module_name
     }
 
     return function()
@@ -219,8 +215,23 @@ function configify:_ListenForComm()
             end
         end)
     else
-        self._comm.OnServerEvent:Connect(function()
-            print("Server received!")
+        self._comm.OnServerEvent:Connect(function(player, att_name, att_value)
+            self._config[att_name].value = att_value
+
+            for _, p in players:GetPlayers() do
+                if p == player then
+                    continue
+                end
+
+                self._comm:FireClient(
+                    p,
+                    att_name,
+                    self._config[att_name].value,
+                    self._config[att_name].min,
+                    self._config[att_name].max,
+                    self._config[att_name].parent_script
+                )
+            end
         end)
     end
 end

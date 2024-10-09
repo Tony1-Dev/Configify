@@ -24,7 +24,12 @@
 				"$properties": {
 					"RunContext": "Client"
 				}
-			},
+			}
+		},
+
+		"ServerStorage": {
+			"$ignoreUnknownInstances": true,
+			"$className": "ServerStorage",
 
 			"ServerTest": {
 				"$path": "server",

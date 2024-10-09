@@ -30,6 +30,24 @@ local function set_visible(parent, bool, type)
     end
 end
 
+local function get_env_from_config_element(self, ui_object: TextButton)
+    local tab_container = self._ScreenGui.Container.TabContainer
+    local tab_name = ui_object.Parent.Name
+    
+    local client_search = tab_container.Client:FindFirstChild(tab_name)
+    local server_search = tab_container.Server:FindFirstChild(tab_name)
+
+    if client_search and server_search then
+        error(`You have scripts called the exact same thing ({tab_name}) in the server and client, this isn't supported by Configify!`)
+    end
+
+    if client_search then
+        return "Client"
+    elseif server_search then
+        return "Server"
+    end
+end
+
 local function create(inst_type: Instance, config: {}, ...)
     local children = {...}
     local inst = Instance.new(inst_type)
@@ -271,13 +289,11 @@ function configify_ui:_Init()
     self:_SelectEnvironment("Client")
 end
 
-function configify_ui:AddTab(module, env_type: "Client" | "Server")
-    local tab_name = module.Name
-
+function configify_ui:AddTab(module_name, env_type: "Client" | "Server")
     -- Make folder for any config for this tab
     local tab_folder = create(
         "Folder", {
-            ["Name"] = tab_name,
+            ["Name"] = module_name,
             ["Parent"] = self._ScreenGui.Container.ScrollingFrame
         },
 
@@ -301,10 +317,10 @@ function configify_ui:AddTab(module, env_type: "Client" | "Server")
     -- Make tab button
     local tab: TextButton = create(
         "TextButton", {
-            ["Name"] = tab_name,
+            ["Name"] = module_name,
             ["BackgroundColor3"] = COLOR_C,
             ["Font"] = Enum.Font.SourceSans,
-            ["Text"] = tab_name,
+            ["Text"] = module_name,
             ["TextColor3"] = Color3.fromRGB(255, 255, 255),
             ["TextScaled"] = true,
             ["Size"] = UDim2.new(0, 80, 1, 0),
@@ -326,7 +342,7 @@ function configify_ui:AddTab(module, env_type: "Client" | "Server")
     tab.Parent = self._ScreenGui.Container.TabContainer[env_type]
 
     if not self._current_tab then
-        self:_SelectTab(tab_name)
+        self:_SelectTab(module_name)
     end
 
     tab.MouseEnter:Connect(function()
@@ -338,7 +354,7 @@ function configify_ui:AddTab(module, env_type: "Client" | "Server")
     end)
 
     tab.MouseButton1Click:Connect(function()
-        self:_SelectTab(tab_name)
+        self:_SelectTab(module_name)
     end)
 end
 
@@ -373,25 +389,23 @@ function configify_ui:_SelectTab(tab_name)
     set_visible(scrolling_frame[tab_name], true, "TextButton")
 end
 
-function configify_ui:AddConfig(att_name, initial, min, max, module)
+function configify_ui:AddConfig(att_name, initial, min, max, module_name)
     local initial_type = type(initial)
     local config = nil
 
     if initial_type == "number" then
-        config = self:_CreateSliderConfig(att_name, initial, min, max, module)
+        config = self:_CreateSliderConfig(att_name, initial, min, max)
     elseif initial_type == "boolean" then
-        config = self:_CreateToggleConfig(att_name, initial, min, max, module)
+        config = self:_CreateToggleConfig(att_name, initial, min, max)
     else
         warn("This type isn't implemented yet")
         return
     end
 
-    config.Parent = self._ScreenGui.Container.ScrollingFrame:FindFirstChild(
-        typeof(module) == "Instance" and module.Name or module    
-    )
+    config.Parent = self._ScreenGui.Container.ScrollingFrame:FindFirstChild(module_name)
 end
 
-function configify_ui:_CreateSliderConfig(att_name, initial, min, max, module)
+function configify_ui:_CreateSliderConfig(att_name, initial, min, max)
     local config: TextButton = create(
         "TextButton", {
             ["Name"] = att_name,
@@ -509,13 +523,13 @@ function configify_ui:_CreateSliderConfig(att_name, initial, min, max, module)
     end)
 
     config.MouseButton1Down:Connect(function()
-        self:_SliderStart(config, min, max, module)
+        self:_SliderStart(config, min, max)
     end)
 
     return config
 end
 
-function configify_ui:_CreateToggleConfig(att_name, initial, min, max, module)
+function configify_ui:_CreateToggleConfig(att_name, initial, min, max)
     local config: TextButton = create(
         "TextButton", {
             ["Name"] = att_name,
@@ -584,7 +598,7 @@ function configify_ui:_CreateToggleConfig(att_name, initial, min, max, module)
     end)
 
     config.MouseButton1Click:Connect(function()
-        self:_ConfigToggleClick(config, module)
+        self:_ConfigToggleClick(config)
     end)
 
     return config
@@ -606,7 +620,7 @@ function configify_ui:_HoverStop(ui_object)
     end
 end
 
-function configify_ui:_ConfigToggleClick(ui_object, module)
+function configify_ui:_ConfigToggleClick(ui_object)
     local Active = ui_object:GetAttribute("Active")
 
     if Active then
@@ -617,10 +631,12 @@ function configify_ui:_ConfigToggleClick(ui_object, module)
         ui_object.ToggleBtn.BackgroundTransparency = 0
     end
 
-    self.UIChanged:Fire(ui_object.Name, ui_object:GetAttribute("Active"), module)
+    local env = get_env_from_config_element(self, ui_object)
+    
+    self.UIChanged:Fire(ui_object.Name, ui_object:GetAttribute("Active"), env)
 end
 
-function configify_ui:_SliderStart(ui_object, min, max, module)
+function configify_ui:_SliderStart(ui_object, min, max)
     local slider_container = ui_object.SliderContainer
     local slider_bg = slider_container.SliderBG
     local slider = slider_bg.Slider
@@ -645,7 +661,7 @@ function configify_ui:_SliderStart(ui_object, min, max, module)
         c1 = nil
         c2 = nil
         
-        self:_SliderStop(ui_object, module)
+        self:_SliderStop(ui_object)
     end)
 
     c2 = uis.InputEnded:Connect(function(input, gpe)
@@ -658,11 +674,11 @@ function configify_ui:_SliderStart(ui_object, min, max, module)
         c1 = nil
         c2 = nil
 
-        self:_SliderStop(ui_object, module)
+        self:_SliderStop(ui_object)
     end)
 end
 
-function configify_ui:_SliderStop(ui_object, module)
+function configify_ui:_SliderStop(ui_object)
     local slider_container = ui_object.SliderContainer
     local slider_bg = slider_container.SliderBG
     local slider = slider_bg.Slider
@@ -670,7 +686,10 @@ function configify_ui:_SliderStop(ui_object, module)
     slider.BackgroundColor3 = COLOR_A
 
     runservice:UnbindFromRenderStep("Configify_SliderStart")
-    self.UIChanged:Fire(ui_object.Name, ui_object.Amount.Text, module)
+
+    local env = get_env_from_config_element(self, ui_object)
+
+    self.UIChanged:Fire(ui_object.Name, ui_object.Amount.Text, env)
 end
 
 function configify_ui:Toggle()
