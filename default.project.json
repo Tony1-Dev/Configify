@@ -1,5 +1,5 @@
 {
-	"name": "Configify",
+	"name": "configify",
 	"tree": {
 		"$className": "DataModel",
 		"$ignoreUnknownInstances": true,
