@@ -1,42 +1,6 @@
 {
 	"name": "configify",
 	"tree": {
-		"$className": "DataModel",
-		"$ignoreUnknownInstances": true,
-
-		"ReplicatedStorage": {
-			"$ignoreUnknownInstances": true,
-			"$className": "ReplicatedStorage",
-
-			"Configify": {
-				"$path": "src"
-			},
-
-			"ClientTest": {
-				"$path": "client",
-				"$properties": {
-					"RunContext": "Client"
-				}
-			},
-
-			"ClientTest2": {
-				"$path": "client2",
-				"$properties": {
-					"RunContext": "Client"
-				}
-			}
-		},
-
-		"ServerStorage": {
-			"$ignoreUnknownInstances": true,
-			"$className": "ServerStorage",
-
-			"ServerTest": {
-				"$path": "server",
-				"$properties": {
-					"RunContext": "Server"
-				}
-			}
-		}
+		"$path": "src"
 	}
 }
