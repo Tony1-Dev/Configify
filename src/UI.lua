@@ -500,6 +500,7 @@ function configify_ui:_SelectTab(tab_name)
     self._current_tab = tab_name
 
     set_visible(scrolling_frame[tab_name], true, "TextButton")
+    set_visible(scrolling_frame[tab_name], true, "TextBox")
 end
 
 function configify_ui:AddConfig(att_name, initial, min, max, module_name)
@@ -510,6 +511,8 @@ function configify_ui:AddConfig(att_name, initial, min, max, module_name)
         config = self:_CreateSliderConfig(att_name, initial, min, max)
     elseif initial_type == "boolean" then
         config = self:_CreateToggleConfig(att_name, initial, min, max)
+    elseif initial_type == "string" then
+        config = self:_CreateEntryConfig(att_name, initial)
     else
         warn("This type isn't implemented yet")
         return
@@ -696,7 +699,7 @@ function configify_ui:_CreateToggleConfig(att_name, initial, min, max)
 
     if initial == true then
         config:SetAttribute("Active", true)
-        config.ToggleBtn.BackgroundTransparency = 0 
+        config.ToggleBtn.BackgroundTransparency = 0
     else
         config:SetAttribute("Active", false)
         config.ToggleBtn.BackgroundTransparency = 1
@@ -712,6 +715,41 @@ function configify_ui:_CreateToggleConfig(att_name, initial, min, max)
 
     config.MouseButton1Click:Connect(function()
         self:_ConfigToggleClick(config)
+    end)
+
+    return config
+end
+
+function configify_ui:_CreateEntryConfig(att_name, initial, min)
+    local config: TextBox = create(
+        "TextBox", {
+            ["Name"] = att_name,
+            ["Text"] = initial,
+            ["BackgroundColor3"] = COLOR_B,
+            ["TextScaled"] = true,
+            ["TextColor3"] = COLOR_E,
+            ["PlaceholderText"] = "Enter string value",
+            ["ClearTextOnFocus"] = false,
+            ["PlaceholderColor3"] = COLOR_A,
+            ["TextXAlignment"] = Enum.TextXAlignment.Left,
+            ["Size"] = UDim2.new(1, 0, 0, 40),
+            ["Visible"] = false,
+        },
+
+        create(
+            "UIStroke", {
+                ["Color"] = COLOR_D,
+                ["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border
+            }
+        )
+    )
+
+    config.MouseEnter:Connect(function(x, y)
+        self:_HoverStart(config)
+    end)
+
+    config.MouseLeave:Connect(function(x, y)
+        self:_HoverStop(config)
     end)
 
     return config
@@ -747,6 +785,10 @@ function configify_ui:_ConfigToggleClick(ui_object)
     local env = get_env_from_config_element(self, ui_object)
     
     self.UIChanged:Fire(ui_object.Name, ui_object:GetAttribute("Active"), env)
+end
+
+function configify_ui:_ConfigEntrySubmit(ui_object)
+    
 end
 
 function configify_ui:_SliderStart(ui_object, min, max)
