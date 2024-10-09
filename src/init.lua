@@ -216,13 +216,15 @@ function configify:_ListenForComm()
                     tab_cache[module_name] = true
                 end
 
-                self._UI:AddConfig(
-                    att_name,
-                    info["value"],
-                    info["min"],
-                    info["max"],
-                    module_name
-                )
+                if not self._config[att_name] then
+                    self._UI:AddConfig(
+                        att_name,
+                        info["value"],
+                        info["min"],
+                        info["max"],
+                        module_name
+                    )
+                end
 
                 self._config[att_name] = {
                     ["value"] = info["value"],
@@ -242,7 +244,7 @@ function configify:_ListenForComm()
                 end
 
                 self._comm:FireClient(p, {
-                    att_name = {
+                    [att_name] = {
                         ["value"] = self._config[att_name].value,
                         ["min"] = self._config[att_name].min,
                         ["max"] = self._config[att_name].max,
