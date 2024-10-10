@@ -137,7 +137,36 @@ function configify:_CreateUI()
     end)
 
     self._UI.Export:Connect(function(tab_name)
-        print(`Export: {tab_name}`)
+        local screen_ui = self._UI._ScreenGui
+        local scrolling_frame = screen_ui.Container.ScrollingFrame
+        local tab_inst = scrolling_frame:FindFirstChild(tab_name)
+
+        local values = {}
+
+        for _, config_inst in tab_inst:GetChildren() do
+            if not (config_inst:IsA("GuiObject")) then
+                continue
+            end           
+            
+            local val = nil
+
+            -- Really lazy way to do this but eh
+            if config_inst:IsA("Frame") then -- string
+                val = config_inst.TextBox.Text
+            elseif config_inst:IsA("TextButton") then -- number/boolean
+                local amt = config_inst:FindFirstChild("Amount")
+
+                if amt then -- number
+                    val = amt.Text
+                else -- boolean
+                    val = config_inst.ToggleBtn.BackgroundTransparency == 0 and true or false 
+                end
+            end
+
+            values[config_inst.Name] = val
+        end
+
+        print(values)
     end)
 
     local function toggle(action_name, input_state, input_obj)
@@ -240,6 +269,8 @@ function configify:_ListenForComm()
                     ["max"] = info["max"],
                     ["parent_script"] = module_name
                 }
+
+                self._UI:UpdateConfig(att_name, module_name, info["value"])
             end
         end)
     else

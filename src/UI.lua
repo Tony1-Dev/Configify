@@ -575,6 +575,28 @@ function configify_ui:_SelectTab(tab_name)
     end
 end
 
+function configify_ui:UpdateConfig(att_name, tab_name, value)
+    local config = self._ScreenGui.Container.ScrollingFrame[tab_name][att_name]
+
+    if config:IsA("Frame") then -- string
+        config.TextBox.Text = value
+    elseif config:IsA("TextButton") then -- number/bool
+        local amt = config:FindFirstChild("Amount")
+
+        if amt then -- number
+            local min = config:GetAttribute("Min")
+            local max = config:GetAttribute("Max")
+            local slider = config.SliderContainer.SliderBG.Slider
+            local percent = (value - min) / (max - min)
+
+            amt.Text = value
+            slider.Size = UDim2.fromScale(percent, 1)
+        else -- bool
+            config.ToggleBtn.BackgroundTransparency = value == true and 0 or 1
+        end
+    end
+end
+
 function configify_ui:AddConfig(att_name, initial, min, max, module_name)
     local initial_type = type(initial)
     local config = nil
@@ -694,6 +716,9 @@ function configify_ui:_CreateSliderConfig(att_name, initial, min, max)
             )
         )
     )
+
+    config:SetAttribute("Min", min)
+    config:SetAttribute("Max", max)
 
     --Initialize slider size based off initial
     local slider_container = config.SliderContainer
