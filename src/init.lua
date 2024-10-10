@@ -136,6 +136,10 @@ function configify:_CreateUI()
         end
     end)
 
+    self._UI.Export:Connect(function(tab_name)
+        print(`Export: {tab_name}`)
+    end)
+
     local function toggle(action_name, input_state, input_obj)
         if input_state == Enum.UserInputState.Cancel or input_state == Enum.UserInputState.End then
             return

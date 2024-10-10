@@ -7,6 +7,8 @@ local COLOR_B = script.Parent:GetAttribute("COLOR_B") or Color3.fromRGB(25, 25, 
 local COLOR_C = script.Parent:GetAttribute("COLOR_C") or Color3.fromRGB(18, 18, 18)
 local COLOR_D = script.Parent:GetAttribute("COLOR_D") or Color3.fromRGB(60, 60, 60)
 local COLOR_E = script.Parent:GetAttribute("COLOR_E") or Color3.fromRGB(255, 255, 255)
+local COLOR_F = script.Parent:GetAttribute("COLOR_F") or Color3.fromRGB(211, 115, 20)
+
 local COLOR_TRUE = script.Parent:GetAttribute("COLOR_TRUE") or Color3.fromRGB(109, 223, 99)
 
 local MIN_SIZE_X = 180 -- pixels
@@ -89,6 +91,7 @@ function configify_ui.new()
     self._current_tab = nil
     self._ScreenGui = nil
     self.UIChanged = signal.new()
+    self.Export = signal.new()
 
     self:_Init()
     
@@ -209,9 +212,9 @@ function configify_ui:_Init()
                     ["Size"] = UDim2.new(1, 0, 0, 30),
                     ["AutomaticCanvasSize"] = Enum.AutomaticSize.X,
                     ["CanvasSize"] = UDim2.fromScale(0, 0),
-                    ["ScrollBarThickness"] = 2,
+                    ["ScrollBarThickness"] = 0,
                     ["ScrollBarImageColor3"] = Color3.fromRGB(0, 0, 0),
-                    ["HorizontalScrollBarInset"] = Enum.ScrollBarInset.ScrollBar,
+                    ["HorizontalScrollBarInset"] = Enum.ScrollBarInset.None,
                 },
 
                 create(
@@ -220,8 +223,22 @@ function configify_ui:_Init()
                     },
 
                     create(
+                        "TextButton", {
+                            ["Name"] = "Export",
+                            ["BackgroundColor3"] = COLOR_F,
+                            ["Size"] = UDim2.new(0, 20, 1, 0),
+                            ["LayoutOrder"] = 0,
+                            ["Text"] = "E",
+                            ["TextColor3"] = COLOR_E,
+                            ["TextScaled"] = true,
+                            ["ZIndex"] = 10,
+                        }
+                    ),
+
+                    create(
                         "UIListLayout", {
                             ["FillDirection"] = Enum.FillDirection.Horizontal,
+                            ["SortOrder"] = Enum.SortOrder.LayoutOrder,
                             ["Padding"] = UDim.new(0, 5)
                         }
                     ),
@@ -242,8 +259,22 @@ function configify_ui:_Init()
                     },
 
                     create(
+                        "TextButton", {
+                            ["Name"] = "Export",
+                            ["BackgroundColor3"] = COLOR_F,
+                            ["Size"] = UDim2.new(0, 20, 1, 0),
+                            ["LayoutOrder"] = 0,
+                            ["Text"] = "E",
+                            ["TextColor3"] = COLOR_E,
+                            ["TextScaled"] = true,
+                            ["ZIndex"] = 10,
+                        }
+                    ),
+
+                    create(
                         "UIListLayout", {
                             ["FillDirection"] = Enum.FillDirection.Horizontal,
+                            ["SortOrder"] = Enum.SortOrder.LayoutOrder,
                             ["Padding"] = UDim.new(0, 5)
                         }
                     ),
@@ -304,10 +335,25 @@ function configify_ui:_Init()
 
     self._ScreenGui = ui
 
+    local scrolling_frame = ui.Container.ScrollingFrame
     local env_container = ui.Container.EnvContainer
     local tab_container = ui.Container.TabContainer
     local drag_btn: TextButton = ui.Container.Drag
     local resize_btn: ImageButton = ui.Container.Resize
+    
+    local export_client: TextButton = tab_container.Client.Export
+    local export_server = tab_container.Server.Export
+
+    -- export logic
+    local function export()
+        if self._current_tab == nil then
+            return
+        end
+
+        self.Export:Fire(self._current_tab)
+    end
+    export_client.MouseButton1Down:Connect(export)
+    export_server.MouseButton1Down:Connect(export)
 
     -- dragging/minimize logic
     drag_btn.MouseButton1Down:Connect(function(x, y)
@@ -462,7 +508,8 @@ function configify_ui:AddTab(module_name, env_type: "Client" | "Server")
             ["TextColor3"] = Color3.fromRGB(255, 255, 255),
             ["TextScaled"] = true,
             ["Size"] = UDim2.new(0, 80, 1, 0),
-            ["AutoButtonColor"] = false
+            ["AutoButtonColor"] = false,
+            ["LayoutOrder"] = 1,
         },
 
         create(
@@ -479,9 +526,9 @@ function configify_ui:AddTab(module_name, env_type: "Client" | "Server")
 
     tab.Parent = self._ScreenGui.Container.TabContainer[env_type]
 
-    if not self._current_tab then
-        self:_SelectTab(module_name)
-    end
+    -- if not self._current_tab then
+    --     self:_SelectTab(module_name)
+    -- end
 
     tab.MouseEnter:Connect(function()
         self:_HoverStart(tab)
@@ -498,24 +545,23 @@ end
 
 function configify_ui:_SelectEnvironment(env_name)
     local container = self._ScreenGui.Container
-    local scrolling_frame = container.ScrollingFrame
+    local other_env = env_name == "Client" and "Server" or "Client"
 
-    if self._current_env then
-        if self._current_env == env_name then
-            return
-        end
-
-        set_visible(container.TabContainer[self._current_env], false)
-        set_visible(scrolling_frame[self._current_tab], false)
+    if self._current_env and self._current_env == env_name then
+        return
     end
 
-    self._current_env = env_name
+    if self._current_tab then
+        self:_SelectTab(nil)
+    end
+    
+    set_visible(container.TabContainer[other_env], false)
+    set_visible(container.TabContainer[env_name], true)
 
-    set_visible(container.TabContainer[self._current_env], true)
+    self._current_env = env_name
 end
 
 function configify_ui:_SelectTab(tab_name)
-    local tab_inst = self._ScreenGui.Container.TabContainer:FindFirstChild(tab_name)
     local scrolling_frame = self._ScreenGui.Container.ScrollingFrame
 
     if self._current_tab then
@@ -524,7 +570,9 @@ function configify_ui:_SelectTab(tab_name)
     
     self._current_tab = tab_name
 
-    set_visible(scrolling_frame[tab_name], true)
+    if tab_name then
+        set_visible(scrolling_frame[tab_name], true)
+    end
 end
 
 function configify_ui:AddConfig(att_name, initial, min, max, module_name)
