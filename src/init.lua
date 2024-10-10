@@ -130,6 +130,7 @@ function configify:_CreateUI()
     self._UI.UIChanged:Connect(function(att_name, att_value, env)
         self._config[att_name].value = att_value
 
+        -- if the config belongs to a server script
         if env == "Server" then
             self._comm:FireServer(att_name, att_value)
         end

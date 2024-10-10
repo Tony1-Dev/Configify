@@ -82,6 +82,16 @@ local ui = create(
                 ["Text"] = "",
                 ["TextColor3"] = COLOR_E
             }
+        ),
+
+        create(
+            "TextLabel", {
+                ["Name"] = "StringTest",
+                ["BackgroundColor3"] = COLOR_C,
+                ["Size"] = UDim2.new(1, 0, 0, 25),
+                ["Text"] = "N/A",
+                ["TextColor3"] = COLOR_E
+            }
         )
     )
 )

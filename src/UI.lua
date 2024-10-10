@@ -29,13 +29,23 @@ local signal = require(script.Parent.Dependencies.Signal)
 local configify_ui = {}
 configify_ui.__index = configify_ui
 
+local function has_prop(inst, prop_name)
+    local succ, err = pcall(function()
+        return inst[prop_name]
+    end)
+
+    return succ and true or false
+end
+
 local function set_visible(parent, bool, type)
     for i, v in parent:GetChildren() do
-        if not v:IsA(type) then
+        if type and not v:IsA(type) then
             continue
         end
 
-        v.Visible = bool
+        if has_prop(v, "Visible") then
+            v.Visible = bool
+        end
     end
 end
 
@@ -495,13 +505,13 @@ function configify_ui:_SelectEnvironment(env_name)
             return
         end
 
-        set_visible(container.TabContainer[self._current_env], false, "TextButton")
-        set_visible(scrolling_frame[self._current_tab], false, "TextButton")
+        set_visible(container.TabContainer[self._current_env], false)
+        set_visible(scrolling_frame[self._current_tab], false)
     end
 
     self._current_env = env_name
 
-    set_visible(container.TabContainer[self._current_env], true, "TextButton")
+    set_visible(container.TabContainer[self._current_env], true)
 end
 
 function configify_ui:_SelectTab(tab_name)
@@ -509,13 +519,12 @@ function configify_ui:_SelectTab(tab_name)
     local scrolling_frame = self._ScreenGui.Container.ScrollingFrame
 
     if self._current_tab then
-        set_visible(scrolling_frame[self._current_tab], false, "TextButton")
+        set_visible(scrolling_frame[self._current_tab], false)
     end
     
     self._current_tab = tab_name
 
-    set_visible(scrolling_frame[tab_name], true, "TextButton")
-    set_visible(scrolling_frame[tab_name], true, "TextBox")
+    set_visible(scrolling_frame[tab_name], true)
 end
 
 function configify_ui:AddConfig(att_name, initial, min, max, module_name)
@@ -735,19 +744,12 @@ function configify_ui:_CreateToggleConfig(att_name, initial, min, max)
     return config
 end
 
-function configify_ui:_CreateEntryConfig(att_name, initial, min)
-    local config: TextBox = create(
-        "TextBox", {
+function configify_ui:_CreateEntryConfig(att_name, initial)
+    local config: Frame = create(
+        "Frame", {
             ["Name"] = att_name,
-            ["Text"] = initial,
-            ["BackgroundColor3"] = COLOR_B,
-            ["TextScaled"] = true,
-            ["TextColor3"] = COLOR_E,
-            ["PlaceholderText"] = "Enter string value",
-            ["ClearTextOnFocus"] = false,
-            ["PlaceholderColor3"] = COLOR_A,
-            ["TextXAlignment"] = Enum.TextXAlignment.Left,
-            ["Size"] = UDim2.new(1, 0, 0, 40),
+            ["BackgroundColor3"] = COLOR_C,
+            ["Size"] = UDim2.new(1, 0, 0, 45),
             ["Visible"] = false,
         },
 
@@ -756,8 +758,57 @@ function configify_ui:_CreateEntryConfig(att_name, initial, min)
                 ["Color"] = COLOR_D,
                 ["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border
             }
+        ),
+
+        create(
+            "UIPadding", {
+                ["PaddingTop"] = UDim.new(0, 3),
+                ["PaddingBottom"] = UDim.new(0, 5),
+                ["PaddingLeft"] = UDim.new(0, 5),
+                ["PaddingRight"] = UDim.new(0, 5)
+            }
+        ),
+
+        create(
+            "TextLabel", {
+                ["Name"] = "Title",
+                ["BackgroundTransparency"] = 1,
+                ["Size"] = UDim2.new(1, 0, 0.4, 0),
+                ["Text"] = att_name,
+                ["TextColor3"] = COLOR_E,
+                ["TextScaled"] = true,
+                ["TextYAlignment"] = Enum.TextYAlignment.Top
+            }
+        ),
+
+        create(
+            "TextBox", {
+                ["AnchorPoint"] = Vector2.new(0, 1),
+                ["Position"] = UDim2.new(0, 0, 1, 0),
+                ["Size"] = UDim2.new(1, 0, 0.6, -3),
+                ["Text"] = initial,
+                ["Font"] = Enum.Font.SourceSans,
+                ["BackgroundColor3"] = COLOR_B,
+                ["TextScaled"] = true,
+                ["TextColor3"] = COLOR_E,
+                ["PlaceholderText"] = "Enter a value.",
+                ["ClearTextOnFocus"] = false,
+                ["PlaceholderColor3"] = COLOR_A,
+                ["TextXAlignment"] = Enum.TextXAlignment.Left,
+                ["Visible"] = true,
+            }
         )
     )
+
+    local TextBox: TextBox = config.TextBox
+
+    TextBox.FocusLost:Connect(function(enterPressed, inputThatCausedFocusLoss)
+        if not enterPressed then
+            return
+        end
+
+        self:_ConfigEntrySubmit(TextBox)
+    end)
 
     config.MouseEnter:Connect(function(x, y)
         self:_HoverStart(config)
@@ -765,12 +816,6 @@ function configify_ui:_CreateEntryConfig(att_name, initial, min)
 
     config.MouseLeave:Connect(function(x, y)
         self:_HoverStop(config)
-    end)
-
-    config.InputBegan:Connect(function(input)
-        if input.KeyCode == Enum.KeyCode.Return then
-            self:_ConfigEntrySubmit(config, input)
-        end
     end)
 
     return config
@@ -809,9 +854,12 @@ function configify_ui:_ConfigToggleClick(ui_object)
 end
 
 function configify_ui:_ConfigEntrySubmit(ui_object)
-    local env = get_env_from_config_element(self, ui_object)
+    local env = get_env_from_config_element(self, ui_object.Parent)
 
-    self.UIChanged:Fire(ui_object.Name, ui_object.Text, env)
+    local config_name = ui_object.Parent.Name -- textbox inside frame
+    local current_value = ui_object.Text
+
+    self.UIChanged:Fire(config_name, current_value, env)
 end
 
 function configify_ui:_SliderStart(ui_object, min, max)
