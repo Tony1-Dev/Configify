@@ -38,13 +38,14 @@ RunService.RenderStepped:Connect(function()
 end)
 ```
 
-![Example](https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExeTlvenZ2ZzBzMGk1ajRrYmtiZWtvbDV4a214eG16M3F6OGs3NzB1cCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/EkFB33KzHUfMxp3wuk/giphy.gif)
+![Example](https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExdGZqZXo3emNiOW9tYzJ4cHRzOHkwcjBidnhrcnpidWoyYnF1MWFteCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/QVXYEEFWNeGcux7SG0/giphy.gif)
 
-# Planned Features
-<ul>
-    <li>Server side constants</li>
-    <li>String support</li>
-</ul>
+# Features
+
+- String, Number & Boolean support
+- Server-Sided Constants that sync visually
+- Exporting values into output (will export to a in-game textbox in future)
+- Dragging, Minimizing & Resizing UI
 
 # Build
 
@@ -53,7 +54,7 @@ Please note that getting the latest version from github/wally will be best, the 
 
 ```toml
 [dependencies]
-Configify = "tony1-dev/configify@0.1.6"
+Configify = "tony1-dev/configify@0.2.25"
 ```
 
 # Support
