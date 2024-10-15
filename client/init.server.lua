@@ -15,3 +15,7 @@ runservice.RenderStepped:Connect(function(deltaTime)
     s.BooleanTest.Text = "Test2 value: " .. tostring(Test2())
     s.StringTest.Text = `Server name is: {SERVER_NAME()}`
 end)
+
+local FUNC_TEST = _G.Cfg:Set("FUNC_TEST", function()
+    print("Works from client")
+end)

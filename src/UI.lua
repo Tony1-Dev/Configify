@@ -598,7 +598,7 @@ function configify_ui:UpdateConfig(att_name, tab_name, value)
 end
 
 function configify_ui:AddConfig(att_name, initial, min, max, module_name)
-    local initial_type = type(initial)
+    local initial_type = typeof(initial)
     local config = nil
 
     if initial_type == "number" then
@@ -607,12 +607,64 @@ function configify_ui:AddConfig(att_name, initial, min, max, module_name)
         config = self:_CreateToggleConfig(att_name, initial, min, max)
     elseif initial_type == "string" then
         config = self:_CreateEntryConfig(att_name, initial)
+    elseif initial_type == "function" then
+        config = self:_CreateFunctionConfig(att_name, initial)
     else
         warn("This type isn't implemented yet")
         return
     end
 
     config.Parent = self._ScreenGui.Container.ScrollingFrame:FindFirstChild(module_name)
+end
+
+function configify_ui:_CreateFunctionConfig(att_name, fn)
+    local config: TextButton = create(
+        "TextButton", {
+            ["Name"] = att_name,
+            ["Size"] = UDim2.new(1, 0, 0, 20),
+            ["BackgroundColor3"] = COLOR_C,
+            ["Text"] = "",
+            ["AutoButtonColor"] = false,
+            ["Visible"] = false
+        },
+
+        create(
+            "UIStroke", {
+                ["Color"] = COLOR_D,
+                ["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border
+            }
+        ),
+
+        create(
+            "TextLabel", {
+                ["Name"] = att_name,
+                ["AnchorPoint"] = Vector2.new(0, 0.5),
+                ["Position"] = UDim2.new(0, 3, 0.5, 0),
+                ["BackgroundTransparency"] = 1,
+                ["Size"] = UDim2.new(1, -23, 0, 16),
+                ["Font"] = Enum.Font.SourceSans,
+                ["Text"] = att_name,
+                ["TextColor3"] = Color3.fromRGB(255, 255, 255),
+                ["TextScaled"] = true,
+            }
+        )
+    )
+
+    config.MouseEnter:Connect(function(x, y)
+        self:_HoverStart(config)
+    end)
+
+    config.MouseLeave:Connect(function(x, y)
+        self:_HoverStop(config)
+    end)
+
+    config.MouseButton1Click:Connect(function()
+        fn()
+        -- local env = get_env_from_config_element(self, config)
+        -- self.UIChanged:Fire(att_name, fn, env)
+    end)
+
+    return config
 end
 
 function configify_ui:_CreateSliderConfig(att_name, initial, min, max)

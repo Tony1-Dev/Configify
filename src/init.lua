@@ -128,6 +128,11 @@ function configify:_CreateUI()
     self._UI = require(script.UI).new()
 
     self._UI.UIChanged:Connect(function(att_name, att_value, env)
+        if typeof(att_value) == "function" then
+            -- TODO: Send this to the server, who will run the function
+            -- Server creates config -> Tells client to make the UI -> Client clicks it -> Tells server to run function
+        end
+
         self._config[att_name].value = att_value
 
         -- if the config belongs to a server script
@@ -219,7 +224,22 @@ function configify:Set(att_name: string, initial: att_type, min: att_type, max: 
         self._UI:AddConfig(att_name, initial, min, max, module_name)
     else
         --TODO: Change this to fire specific clients based on a whitelist/group rank
-        self._comm:FireAllClients(att_name, initial, min, max, module_name)
+        
+        if typeof(initial) == "function" then
+            warn("Function config type isn't supported yet.")
+            return
+        end
+        
+        local value = typeof(initial) == "function" and "funcion" or initial
+            
+        self._comm:FireAllClients({
+            [att_name] = {
+                ["value"] = value,
+                ["min"] = min,
+                ["max"] = max,
+                ["parent_script"] = module_name,
+            }
+        })
     end
 
     self._config[att_name] = {
@@ -253,6 +273,10 @@ function configify:_ListenForComm()
                     tab_cache[module_name] = true
                 end
 
+                if info["value"] == "function" then -- using this just for type check, functions can't be passed over network
+                    info["value"] = function() end
+                end
+
                 if not self._config[att_name] then
                     self._UI:AddConfig(
                         att_name,
@@ -261,6 +285,8 @@ function configify:_ListenForComm()
                         info["max"],
                         module_name
                     )
+                else
+                    self._UI:UpdateConfig(att_name, module_name, info["value"])
                 end
 
                 self._config[att_name] = {
@@ -269,8 +295,6 @@ function configify:_ListenForComm()
                     ["max"] = info["max"],
                     ["parent_script"] = module_name
                 }
-
-                self._UI:UpdateConfig(att_name, module_name, info["value"])
             end
         end)
     else
